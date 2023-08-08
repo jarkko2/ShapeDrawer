@@ -109,7 +109,7 @@ public class MouseController : MonoBehaviour
         else
         {
             sphere.transform.SetParent(currentRoot.transform);
-            Destroy(sphere.GetComponent<Rigidbody>());
+            Destroy(sphere.GetComponent<SphereController>().rigidBody);
         }
 
         earlierSpawnedHitPoint = hitPoint;
@@ -148,12 +148,13 @@ public class MouseController : MonoBehaviour
     {
         for (int i = 0; i < drawedShape.Count; i++)
         {
-            Rigidbody drawedShapeRigidbody = drawedShape[i].GetComponent<Rigidbody>();
+            Rigidbody drawedShapeRigidbody = drawedShape[i].GetComponent<SphereController>().rigidBody;
             drawedShapeRigidbody.isKinematic = false;
             drawedShapeRigidbody.solverIterations = solverIterations;
             drawedShapeRigidbody.mass = sphereMass;
 
             List<GameObject> neighbors = drawedShape[i].GetComponent<SphereController>().FindNeighbors();
+            Debug.Log("Found " + neighbors.Count);
             for (int neighborIndex = 0; neighborIndex < neighbors.Count; neighborIndex++)
             {
                 CreateAndConnectConfigurableJoint(neighbors[neighborIndex], drawedShape[i]);
@@ -168,8 +169,8 @@ public class MouseController : MonoBehaviour
 
     private void CreateAndConnectConfigurableJoint(GameObject gameObject, GameObject toConnect)
     {
-        ConfigurableJoint configurableJoint = gameObject.AddComponent<ConfigurableJoint>();
-        configurableJoint.connectedBody = toConnect.GetComponent<Rigidbody>();
+        ConfigurableJoint configurableJoint = gameObject.GetComponent<SphereController>().visualObject.AddComponent<ConfigurableJoint>();
+        configurableJoint.connectedBody = toConnect.GetComponent<SphereController>().rigidBody;
         configurableJoint.angularXMotion = ConfigurableJointMotion.Locked;
         configurableJoint.angularYMotion = ConfigurableJointMotion.Locked;
         configurableJoint.angularZMotion = ConfigurableJointMotion.Locked;
