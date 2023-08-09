@@ -8,6 +8,7 @@ public class SphereController : MonoBehaviour
     public GameObject visualObject;
     public MeshRenderer meshRenderer;
     public MeshFilter meshFilter;
+    public MeshCollider meshCollider;
     public Rigidbody rigidBody;
     public List<GameObject> FindNeighbors()
     {
