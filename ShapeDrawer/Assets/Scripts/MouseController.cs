@@ -4,26 +4,27 @@ using UnityEngine.SceneManagement;
 
 public class MouseController : MonoBehaviour
 {
+    [Header("Prefabs")]
     [SerializeField] private GameObject spherePrefab;
     [SerializeField] private GameObject rootPrefab;
+
+    [Header("Cursor object")]
     [SerializeField] private GameObject cursor;
-    public bool drawing = false;
-    public Vector3 earlierSpawnedHitPoint = Vector3.zero;
-    public GameObject earlierSpawnedObject = null;
-    public GameObject currentRoot;
 
-    public List<GameObject> drawedShape = new List<GameObject>();
+    [Header("Cube settings")]
     [SerializeField] private float drawingOffset = 0.5f;
-
     [SerializeField] private int solverIterations = 10;
     [SerializeField] private float cubeMass = 1;
-
     [SerializeField] private float breakForce = 100;
     [SerializeField] private float breakTorque = 100;
-
     [SerializeField] private bool createSolidObjects = false;
+    [SerializeField] private int maximumDrawObjectSize = 20;
 
-    public enum Direction
+    private bool drawing = false;
+    private GameObject earlierSpawnedObject = null;
+    private GameObject currentRoot;
+    private List<GameObject> drawedShape = new List<GameObject>();
+    private enum Direction
     {
         Left,
         Right,
@@ -31,36 +32,44 @@ public class MouseController : MonoBehaviour
         Down,
         None
     }
-
-    public Direction cubeDirection = Direction.None;
+    private Direction cubeDirection = Direction.None;
+    private bool hasExceededMaxSize;
 
     private void Update()
     {
-        if (Input.GetMouseButton(0) && !drawing)
-        {
-            drawing = true;
+        CheckInputs();
+    }
 
-            if (createSolidObjects)
-            {
-                CreateRootAtMousePosition();
-            }
-        }
-        if (Input.GetMouseButton(0) && drawing)
+    private void CheckInputs()
+    {
+        if (Input.GetMouseButton(0) && !hasExceededMaxSize)
         {
-            if (!createSolidObjects)
+            if (drawedShape.Count < maximumDrawObjectSize)
             {
-                CreateSphereAtMousePosition(true);
+                if (!drawing)
+                {
+                    drawing = true;
+                    if (createSolidObjects) CreateRootAtMousePosition();
+                }
+                else
+                {
+                    CreateCubeAtMousePosition(!createSolidObjects);
+                }
             }
             else
             {
-                CreateSphereAtMousePosition(false);
+                hasExceededMaxSize = true;
             }
         }
-        if (!Input.GetMouseButton(0) && drawing)
+        else if (drawing && !hasExceededMaxSize)
         {
             drawing = false;
             EnablePhysicsOnRigidbody();
             ConnectDrawedShapes();
+        }
+        else
+        {
+            hasExceededMaxSize = false;
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -69,11 +78,28 @@ public class MouseController : MonoBehaviour
         }
     }
 
-    private void CreateSphereAtMousePosition(bool useConfigurableJoint)
+    private void CreateRootAtMousePosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
+        if (Physics.Raycast(ray, out hit))
+        {
+            if (HasNearbyColliders(hit.point)) return;
+
+            if (currentRoot == null)
+            {
+                Vector3 position = hit.point + hit.normal * 1.0f;
+                GameObject root = Instantiate(rootPrefab, position, Quaternion.identity);
+                currentRoot = root;
+            }
+        }
+    }
+
+    private void CreateCubeAtMousePosition(bool useConfigurableJoint)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
         {
             if (HasNearbyColliders(hit.point)) return;
@@ -83,13 +109,13 @@ public class MouseController : MonoBehaviour
             {
                 Vector3 direction = earlierSpawnedObject == null ? hit.normal : hit.point + hit.normal * 1.0f - earlierSpawnedObject.transform.position;
                 Vector3 position = earlierSpawnedObject == null ? hit.point + direction * 1.0f : earlierSpawnedObject.transform.position + direction.normalized * drawingOffset;
-                CreateSphere(position, useConfigurableJoint, hit.point);
+                CreateCube(position, useConfigurableJoint, hit.point);
                 distance = Vector3.Distance(earlierSpawnedObject.transform.position, cursor.transform.position);
             }
         }
     }
 
-    private void CreateSphere(Vector3 position, bool useConfigurableJoint, Vector3 hitPoint)
+    private void CreateCube(Vector3 position, bool useConfigurableJoint, Vector3 hitPoint)
     {
         GameObject sphere = Instantiate(spherePrefab, position, Quaternion.identity);
         if (useConfigurableJoint)
@@ -103,37 +129,29 @@ public class MouseController : MonoBehaviour
         }
         if (earlierSpawnedObject)
         {
-            cubeDirection = GetDirectionComparedToEarlierSpawned(sphere);
         }
         List<Vector3> earlierVertexWorldPositions = new List<Vector3>();
         if (earlierSpawnedObject)
         {
-            
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[1])); // Down right 0        
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[2])); // Up right 1         
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[0])); // Down left 2        
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[3])); // Up left 3
+            CubeController cubeController = earlierSpawnedObject.GetComponent<CubeController>();
+            Mesh mesh = cubeController.meshFilter.mesh;
+            Transform visualTransform = cubeController.visualObject.transform;
+
+            earlierVertexWorldPositions.AddRange(new Vector3[]
+            {
+                visualTransform.TransformPoint(mesh.vertices[1]), // Down right 0
+                visualTransform.TransformPoint(mesh.vertices[2]), // Up right 1
+                visualTransform.TransformPoint(mesh.vertices[0]), // Down left 2
+                visualTransform.TransformPoint(mesh.vertices[3])  // Up left 3
+            });
+
+            cubeDirection = GetDirectionComparedToEarlierSpawned(sphere);
         }
 
         GenerateCube(sphere, earlierVertexWorldPositions, cubeDirection);
 
         sphere.GetComponent<CubeController>().meshCollider.sharedMesh = sphere.GetComponent<CubeController>().meshFilter.mesh;
-        earlierSpawnedHitPoint = hitPoint;
         earlierSpawnedObject = sphere;
-    }
-
-    private Direction GetDirectionComparedToEarlierSpawned(GameObject sphere)
-    {
-        Vector3 direction = (earlierSpawnedObject.transform.position - sphere.GetComponent<CubeController>().visualObject.transform.position).normalized;
-        if (Mathf.Abs(direction.y) > Mathf.Abs(direction.x) && Mathf.Abs(direction.y) > Mathf.Abs(direction.z))
-        {
-            return direction.y > 0 ? Direction.Up : Direction.Down;
-        }
-        else if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y) && Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
-        {
-            return direction.x > 0 ? Direction.Right : Direction.Left;
-        }
-        return Direction.None;
     }
 
     private void GenerateCube(GameObject sphere, List<Vector3> earlierVertexWorldPositions, Direction direction)
@@ -283,38 +301,6 @@ public class MouseController : MonoBehaviour
         mesh.uv = uv;
     }
 
-    private void CreateRootAtMousePosition()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
-        {
-            if (HasNearbyColliders(hit.point)) return;
-
-            if (currentRoot == null)
-            {
-                Vector3 position = hit.point + hit.normal * 1.0f;
-                GameObject root = Instantiate(rootPrefab, position, Quaternion.identity);
-                currentRoot = root;
-            }
-        }
-    }
-
-    private bool HasNearbyColliders(Vector3 position)
-    {
-        Collider[] nearbyColliders = Physics.OverlapSphere(position, drawingOffset);
-
-        for (int i = 0; i < nearbyColliders.Length; i++)
-        {
-            if (nearbyColliders[i].transform.GetComponent<CubeVisualController>() || nearbyColliders[i].transform.parent?.GetComponent<RootController>() || nearbyColliders[i].transform.name == "Floor")
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void ConnectDrawedShapes()
     {
         for (int i = 0; i < drawedShape.Count; i++)
@@ -332,7 +318,6 @@ public class MouseController : MonoBehaviour
             }
         }
         earlierSpawnedObject = null;
-        earlierSpawnedHitPoint = Vector3.zero;
         drawedShape.Clear();
         cubeDirection = Direction.None;
     }
@@ -351,6 +336,34 @@ public class MouseController : MonoBehaviour
         configurableJoint.breakTorque = breakTorque;
     }
 
+    private Direction GetDirectionComparedToEarlierSpawned(GameObject sphere)
+    {
+        Vector3 direction = (earlierSpawnedObject.transform.position - sphere.GetComponent<CubeController>().visualObject.transform.position).normalized;
+        if (Mathf.Abs(direction.y) > Mathf.Abs(direction.x) && Mathf.Abs(direction.y) > Mathf.Abs(direction.z))
+        {
+            return direction.y > 0 ? Direction.Up : Direction.Down;
+        }
+        else if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y) && Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+        {
+            return direction.x > 0 ? Direction.Right : Direction.Left;
+        }
+        return Direction.None;
+    }
+
+    private bool HasNearbyColliders(Vector3 position)
+    {
+        Collider[] nearbyColliders = Physics.OverlapSphere(position, drawingOffset);
+
+        for (int i = 0; i < nearbyColliders.Length; i++)
+        {
+            if (nearbyColliders[i].transform.GetComponent<CubeVisualController>() || nearbyColliders[i].transform.parent?.GetComponent<RootController>() || nearbyColliders[i].transform.name == "Floor")
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void EnablePhysicsOnRigidbody()
     {
         if (currentRoot)
@@ -362,6 +375,8 @@ public class MouseController : MonoBehaviour
             currentRoot = null;
         }
     }
+
+    #region UI functions
 
     public void Reset()
     {
@@ -401,4 +416,6 @@ public class MouseController : MonoBehaviour
                 break;
         }
     }
+
+    #endregion UI functions
 }

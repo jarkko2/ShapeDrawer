@@ -1217,18 +1217,13 @@ MonoBehaviour:
   rootPrefab: {fileID: 4254450249299833383, guid: d111b701dfb5cf041871097377ad9890,
     type: 3}
   cursor: {fileID: 1672679679}
-  drawing: 0
-  earlierSpawnedHitPoint: {x: 0, y: 0, z: 0}
-  earlierSpawnedObject: {fileID: 0}
-  currentRoot: {fileID: 0}
-  drawedShape: []
   drawingOffset: 1.01
   solverIterations: 10
-  sphereMass: 1
+  cubeMass: 1
   breakForce: 750
   breakTorque: 750
   createSolidObjects: 0
-  cubeDirection: 4
+  maximumDrawObjectSize: 250
 --- !u!1 &917820558
 GameObject:
   m_ObjectHideFlags: 0
