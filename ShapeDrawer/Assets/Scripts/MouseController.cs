@@ -416,6 +416,12 @@ public class MouseController : MonoBehaviour
             case "mass":
                 sphereMass = (float)value;
                 break;
+            case "breakForce":
+                breakForce = (float)value;
+                break;
+            case "breakTorque":
+                breakTorque = (float)value;
+                break;
             default:
                 break;
         }
