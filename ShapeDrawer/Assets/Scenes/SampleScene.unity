@@ -461,10 +461,11 @@ MonoBehaviour:
   drawedShape: []
   drawingOffset: 1.01
   solverIterations: 10
-  sphereMass: 0.5
-  breakForce: 1000
-  breakTorque: 1000
+  sphereMass: 1
+  breakForce: 750
+  breakTorque: 750
   createSolidObjects: 0
+  cubeDirection: 4
 --- !u!1 &1211504366
 GameObject:
   m_ObjectHideFlags: 0

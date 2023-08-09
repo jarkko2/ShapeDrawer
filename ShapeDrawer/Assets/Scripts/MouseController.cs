@@ -54,6 +54,7 @@ public class MouseController : MonoBehaviour
             else
             {
                 CreateSphereAtMousePosition(false);
+               
             }
             
         }
@@ -82,7 +83,8 @@ public class MouseController : MonoBehaviour
 
             for (int i = 0; i < nearbyColliders.Length; i++)
             {
-                if (nearbyColliders[i].transform.GetComponent<SphereController>() || nearbyColliders[i].transform.parent?.GetComponent<RootController>())
+                Debug.Log("Nearby colliders " + nearbyColliders[i].transform.name);
+                if (nearbyColliders[i].transform.GetComponent<CubeVisualController>() || nearbyColliders[i].transform.parent?.GetComponent<RootController>() || nearbyColliders[i].transform.name == "Floor")
                 {
                     return;
                 }
@@ -156,328 +158,135 @@ public class MouseController : MonoBehaviour
                 Debug.Log("Direction is not primarily pointing up, down, left, or right.");
             }
         }
-        // Earlier in left
-        Vector3 worldPosEarlierDownRight = Vector3.zero;
-        Vector3 worldPosEarlierUpRight = Vector3.zero;
-
-        // Earlier in right
-        Vector3 worldPosEarlierDownLeft = Vector3.zero;
-        Vector3 worldPosEarlierUpLeft = Vector3.zero;
-
+        List<Vector3> earlierVertexWorldPositions = new List<Vector3>();
         if (earlierSpawnedObject)
         {
-            worldPosEarlierDownRight = earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[1]);
-            worldPosEarlierUpRight = earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[2]);
+            // Down right 0
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[1]));
 
-            worldPosEarlierDownLeft = earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[4]);
-            worldPosEarlierUpLeft = earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[3]);
+            // Up right 1
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[2]));
+
+            // Down left 2
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[0]));
+
+            // Up left 3
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[3]));
         }
 
-        if (cubeDirection == Direction.Left)
-        {
-            GenerateCubeEarlierInLeft(sphere, worldPosEarlierDownRight, worldPosEarlierUpRight);
-        }
-        if (cubeDirection == Direction.Right)
-        {
-            GenerateCubeEarlierInRight(sphere, worldPosEarlierDownLeft, worldPosEarlierUpLeft);
-        }
-        if (cubeDirection == Direction.Up)
-        {
-            GenerateCubeEarlierInUp(sphere, worldPosEarlierDownRight, worldPosEarlierDownLeft);
-        }
-        if (cubeDirection == Direction.Down)
-        {
-            GenerateCubeEarlierInDown(sphere, worldPosEarlierUpRight, worldPosEarlierUpLeft);
-        }
-        if (cubeDirection == Direction.None)
-        {
-            GenerateCubeEarlierInNone(sphere);
-        }
+        GenerateCube(sphere, earlierVertexWorldPositions, cubeDirection);
+
         sphere.GetComponent<SphereController>().meshCollider.sharedMesh = sphere.GetComponent<SphereController>().meshFilter.mesh;
         earlierSpawnedHitPoint = hitPoint;
         earlierSpawnedObject = sphere;
     }
 
-    private void GenerateCubeEarlierInLeft(GameObject sphere, Vector3 worldPosEarlierDownRight, Vector3 worldPosEarlierUpRight)
+    private void GenerateCube(GameObject sphere, List<Vector3> earlierVertexWorldPositions, Direction direction)
     {
         MeshFilter meshFilter = sphere.GetComponent<SphereController>().meshFilter;
         Mesh mesh = new Mesh();
         meshFilter.mesh = mesh;
 
-        //Down left offset
-        Vector3 downLeftOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierDownRight);
-        Vector3 upLeftOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierUpRight);
-        Debug.Log("offset" + downLeftOffset);
-        Vector3[] vertices = new Vector3[]
+        Vector3 earlierDownRight = Vector3.zero;
+        Vector3 earlierUpRight = Vector3.zero;
+
+        Vector3 earlierDownLeft = Vector3.zero;
+        Vector3 earlierUpLeft = Vector3.zero;
+        if (earlierVertexWorldPositions.Count > 0)
         {
-            // Front
-            downLeftOffset, // Down left
+            earlierDownLeft = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[0]);
+            earlierUpLeft = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[1]);
+            earlierDownRight = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[2]);
+            earlierUpRight = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[3]);
+        }
+
+        Vector3[] vertices = new Vector3[8];
+
+        if (direction == Direction.None)
+        {
+            vertices = new Vector3[]
+            {
+                // Front
+                new Vector3(-0.5f, -0.5f, -0.5f), // Down left
+                new Vector3(0.5f, -0.5f, -0.5f), // Down right
+                new Vector3(0.5f, 0.5f, -0.5f), // Up Right
+                new Vector3(-0.5f, 0.5f, -0.5f), // Up left
+
+                // Back
+                new Vector3(-0.5f, -0.5f, 0.5f), // Down left
+                new Vector3(0.5f, -0.5f, 0.5f), // Down right
+                new Vector3(0.5f, 0.5f, 0.5f), // Up right
+                new Vector3(-0.5f, 0.5f, 0.5f), // Up left
+            };
+        }
+        if (direction == Direction.Left)
+        {
+            vertices = new Vector3[]
+            {
+                // Front
+            new Vector3(earlierDownLeft.x, earlierDownLeft.y, -0.5f), // Down left
             new Vector3(0.5f, -0.5f, -0.5f), // Down right
             new Vector3(0.5f, 0.5f, -0.5f), // Up Right
-            upLeftOffset, // Up left
+            new Vector3(earlierUpLeft.x, earlierUpLeft.y, -0.5f), // Up left
 
             // Back
-            new Vector3(downLeftOffset.x, downLeftOffset.y, 0.5f), // Down left
+            new Vector3(earlierDownLeft.x, earlierDownLeft.y, 0.5f), // Down left
             new Vector3(0.5f, -0.5f, 0.5f), // Down right
             new Vector3(0.5f, 0.5f, 0.5f), // Up right
-            new Vector3(upLeftOffset.x, upLeftOffset.y, 0.5f), // Up left
-        };
-
-        int[] triangles = new int[]
+            new Vector3(earlierUpLeft.x, earlierUpLeft.y, 0.5f), // Up left
+            };
+        }
+        if (direction == Direction.Right)
         {
-            0, 2, 1, 0, 3, 2,    // Front
-            1, 2, 6, 1, 6, 5,    // Right
-            5, 6, 7, 5, 7, 4,    // Back
-            4, 7, 3, 4, 3, 0,    // Left
-            3, 7, 6, 3, 6, 2,    // Top
-            4, 0, 1, 4, 1, 5     // Bottom
-        };
-
-        Vector3[] normals = new Vector3[]
-        {
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-        };
-
-        Vector2[] uv = new Vector2[]
-        {
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-        };
-
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.normals = normals;
-        mesh.uv = uv;
-    }
-
-    private void GenerateCubeEarlierInRight(GameObject sphere, Vector3 worldPosEarlierDownLeft, Vector3 worldPosEarlierUpLeft)
-    {
-        MeshFilter meshFilter = sphere.GetComponent<SphereController>().meshFilter;
-        Mesh mesh = new Mesh();
-        meshFilter.mesh = mesh;
-
-        //Down left offset
-        Vector3 downRightOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierDownLeft);
-        Vector3 upRightOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierUpLeft);
-
-        Vector3[] vertices = new Vector3[]
-        {
-            // Front
+            vertices = new Vector3[]
+            {
+                // Front
             new Vector3(-0.5f, -0.5f, -0.5f), // Down left
-            new Vector3(downRightOffset.x, downRightOffset.y, -0.5f), // Down right
-            new Vector3(upRightOffset.x, upRightOffset.y, -0.5f), // Up Right
+            new Vector3(earlierDownRight.x, earlierDownRight.y, -0.5f), // Down right
+            new Vector3(earlierUpRight.x, earlierUpRight.y, -0.5f), // Up Right
             new Vector3(-0.5f, 0.5f, -0.5f), // Up left
 
             // Back
             new Vector3(-0.5f, -0.5f, 0.5f), // Down left
-            new Vector3(downRightOffset.x, downRightOffset.y, 0.5f), // Down right
-            new Vector3(upRightOffset.x, upRightOffset.y, 0.5f), // Up right
+            new Vector3(earlierDownRight.x, earlierDownRight.y, 0.5f), // Down right
+            new Vector3(earlierUpRight.x, earlierUpRight.y, 0.5f), // Up right
             new Vector3(-0.5f, 0.5f, 0.5f), // Up left
-        };
-
-        int[] triangles = new int[]
+            };
+        }
+        if (direction == Direction.Up)
         {
-            0, 2, 1, 0, 3, 2,    // Front
-            1, 2, 6, 1, 6, 5,    // Right
-            5, 6, 7, 5, 7, 4,    // Back
-            4, 7, 3, 4, 3, 0,    // Left
-            3, 7, 6, 3, 6, 2,    // Top
-            4, 0, 1, 4, 1, 5     // Bottom
-        };
+            vertices = new Vector3[]
+            {
+                 // Front
+                new Vector3(-0.5f, -0.5f, -0.5f), // Down left 0
+                new Vector3(0.5f, -0.5f, -0.5f), // Down right 1
+                new Vector3(earlierDownLeft.x, earlierDownLeft.y, -0.5f), // Up Right 2
+                new Vector3(earlierDownRight.x, earlierDownRight.y, -0.5f), // Up left 3
 
-        Vector3[] normals = new Vector3[]
+                // Back
+                new Vector3(-0.5f, -0.5f, 0.5f), // Down left
+                new Vector3(0.5f, -0.5f, 0.5f), // Down right
+                new Vector3(earlierDownLeft.x, earlierDownLeft.y, 0.5f), // Up right
+                new Vector3(earlierDownRight.x, earlierDownRight.y, 0.5f), // Up left
+            };
+        }
+        if (direction == Direction.Down)
         {
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-        };
-
-        Vector2[] uv = new Vector2[]
-        {
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-        };
-
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.normals = normals;
-        mesh.uv = uv;
-    }
-
-    private void GenerateCubeEarlierInUp(GameObject sphere, Vector3 worldPosEarlierDownRight, Vector3 worldPosEarlierDownLeft)
-    {
-        MeshFilter meshFilter = sphere.GetComponent<SphereController>().meshFilter;
-        Mesh mesh = new Mesh();
-        meshFilter.mesh = mesh;
-
-        //Down left offset
-        Vector3 downRightOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierDownRight);
-        Vector3 downLeftOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierDownLeft);
-
-        Vector3[] vertices = new Vector3[]
-        {
-            // Front
-            new Vector3(-0.5f, -0.5f, -0.5f), // Down left 0
-            new Vector3(0.5f, -0.5f, -0.5f), // Down right 1
-            new Vector3(downRightOffset.x, downRightOffset.y, -0.5f), // Up Right 2
-            new Vector3(downLeftOffset.x, downLeftOffset.y, -0.5f), // Up left 3
-
-            // Back
-            new Vector3(-0.5f, -0.5f, 0.5f), // Down left
-            new Vector3(0.5f, -0.5f, 0.5f), // Down right
-            new Vector3(downRightOffset.x, downRightOffset.y, 0.5f), // Up right
-            new Vector3(downLeftOffset.x, downLeftOffset.y, 0.5f), // Up left
-        };
-
-        int[] triangles = new int[]
-        {
-            0, 2, 1, 0, 3, 2,    // Front
-            1, 2, 6, 1, 6, 5,    // Right
-            5, 6, 7, 5, 7, 4,    // Back
-            4, 7, 3, 4, 3, 0,    // Left
-            3, 7, 6, 3, 6, 2,    // Top
-            4, 0, 1, 4, 1, 5     // Bottom
-        };
-
-        Vector3[] normals = new Vector3[]
-        {
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-        };
-
-        Vector2[] uv = new Vector2[]
-        {
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-        };
-
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.normals = normals;
-        mesh.uv = uv;
-    }
-
-    private void GenerateCubeEarlierInDown(GameObject sphere, Vector3 worldPosEarlierUpRight, Vector3 worldPosEarlierUpLeft)
-    {
-        MeshFilter meshFilter = sphere.GetComponent<SphereController>().meshFilter;
-        Mesh mesh = new Mesh();
-        meshFilter.mesh = mesh;
-
-        //Down left offset
-        Vector3 upRightOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierUpRight);
-        Vector3 upLeftOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierUpLeft);
-
-        Vector3[] vertices = new Vector3[]
-        {
-            // Front
-            new Vector3(upLeftOffset.x, upLeftOffset.y, -0.5f), // Down left
-            new Vector3(upRightOffset.x, upRightOffset.y, -0.5f), // Down right
+            vertices = new Vector3[]
+            {
+               // Front
+            new Vector3(earlierUpRight.x, earlierUpRight.y, -0.5f), // Down left
+            new Vector3(earlierUpLeft.x, earlierUpLeft.y, -0.5f), // Down right
             new Vector3(0.5f, 0.5f, -0.5f), // Up Right
             new Vector3(-0.5f, 0.5f, -0.5f), // Up left
 
             // Back
-            new Vector3(upLeftOffset.x, upLeftOffset.y, 0.5f), // Down left
-            new Vector3(upRightOffset.x, upRightOffset.y, 0.5f), // Down right
+            new Vector3(earlierUpRight.x, earlierUpRight.y, 0.5f), // Down left
+            new Vector3(earlierUpLeft.x, earlierUpLeft.y, 0.5f), // Down right
             new Vector3(0.5f, 0.5f, 0.5f), // Up right
             new Vector3(-0.5f, 0.5f, 0.5f), // Up left
-        };
-
-        int[] triangles = new int[]
-        {
-            0, 2, 1, 0, 3, 2,    // Front
-            1, 2, 6, 1, 6, 5,    // Right
-            5, 6, 7, 5, 7, 4,    // Back
-            4, 7, 3, 4, 3, 0,    // Left
-            3, 7, 6, 3, 6, 2,    // Top
-            4, 0, 1, 4, 1, 5     // Bottom
-        };
-
-        Vector3[] normals = new Vector3[]
-        {
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.forward,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-            Vector3.back,
-        };
-
-        Vector2[] uv = new Vector2[]
-        {
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1),
-        };
-
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.normals = normals;
-        mesh.uv = uv;
-    }
-
-    private void GenerateCubeEarlierInNone(GameObject sphere)
-    {
-        MeshFilter meshFilter = sphere.GetComponent<SphereController>().meshFilter;
-        Mesh mesh = new Mesh();
-        meshFilter.mesh = mesh;
-
-        Vector3[] vertices = new Vector3[]
-        {
-            // Front
-            new Vector3(-0.5f, -0.5f, -0.5f), // Down left
-            new Vector3(0.5f, -0.5f, -0.5f), // Down right
-            new Vector3(0.5f, 0.5f, -0.5f), // Up Right
-            new Vector3(-0.5f, 0.5f, -0.5f), // Up left
-
-            // Back
-            new Vector3(-0.5f, -0.5f, 0.5f), // Down left
-            new Vector3(0.5f, -0.5f, 0.5f), // Down right
-            new Vector3(0.5f, 0.5f, 0.5f), // Up right
-            new Vector3(-0.5f, 0.5f, 0.5f), // Up left
-        };
+            };
+        }
 
         int[] triangles = new int[]
         {
