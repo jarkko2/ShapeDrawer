@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Runtime.InteropServices;
+using UnityEngine.SceneManagement;
 
 public class MouseController : MonoBehaviour
 {
@@ -400,5 +401,10 @@ public class MouseController : MonoBehaviour
             currentRoot.GetComponent<Rigidbody>().isKinematic = false;
             currentRoot = null;
         } 
+    }
+
+    public void Reset()
+    {
+        SceneManager.LoadScene(0);
     }
 }
