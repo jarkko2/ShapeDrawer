@@ -407,4 +407,29 @@ public class MouseController : MonoBehaviour
     {
         SceneManager.LoadScene(0);
     }
+
+    public void HandleValueChange(string name, decimal value)
+    {
+        Debug.Log(value);
+        switch (name)
+        {
+            case "mass":
+                sphereMass = (float)value;
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void ChangeToggleState(string name, bool state)
+    {
+        switch (name)
+        {
+            case "solid":
+                createSolidObjects = state;
+                break;
+            default:
+                break;
+        }
+    }
 }
