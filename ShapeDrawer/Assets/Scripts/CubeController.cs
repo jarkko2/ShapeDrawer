@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SphereController : MonoBehaviour
+public class CubeController : MonoBehaviour
 {
     [SerializeField] private float connectionDistance = 1.0f;
     public GameObject visualObject;

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Runtime.InteropServices;
 using UnityEngine.SceneManagement;
 
 public class MouseController : MonoBehaviour
@@ -17,7 +16,7 @@ public class MouseController : MonoBehaviour
     [SerializeField] private float drawingOffset = 0.5f;
 
     [SerializeField] private int solverIterations = 10;
-    [SerializeField] private float sphereMass = 1;
+    [SerializeField] private float cubeMass = 1;
 
     [SerializeField] private float breakForce = 100;
     [SerializeField] private float breakTorque = 100;
@@ -35,7 +34,7 @@ public class MouseController : MonoBehaviour
 
     public Direction cubeDirection = Direction.None;
 
-    void Update()
+    private void Update()
     {
         if (Input.GetMouseButton(0) && !drawing)
         {
@@ -55,13 +54,10 @@ public class MouseController : MonoBehaviour
             else
             {
                 CreateSphereAtMousePosition(false);
-               
             }
-            
         }
         if (!Input.GetMouseButton(0) && drawing)
         {
-            
             drawing = false;
             EnablePhysicsOnRigidbody();
             ConnectDrawedShapes();
@@ -80,29 +76,9 @@ public class MouseController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            Collider[] nearbyColliders = Physics.OverlapSphere(hit.point, drawingOffset);
-
-            for (int i = 0; i < nearbyColliders.Length; i++)
-            {
-                Debug.Log("Nearby colliders " + nearbyColliders[i].transform.name);
-                if (nearbyColliders[i].transform.GetComponent<CubeVisualController>() || nearbyColliders[i].transform.parent?.GetComponent<RootController>() || nearbyColliders[i].transform.name == "Floor")
-                {
-                    return;
-                }
-            }
-
+            if (HasNearbyColliders(hit.point)) return;
             cursor.transform.position = hit.point + hit.normal * 1.0f;
-
-            float distance;
-            if (earlierSpawnedObject != null)
-            {
-                distance = Vector3.Distance(earlierSpawnedObject.transform.position, cursor.transform.position);
-            }
-            else
-            {
-                distance = drawingOffset;
-            }
-            
+            float distance = earlierSpawnedObject == null ? drawingOffset : Vector3.Distance(earlierSpawnedObject.transform.position, cursor.transform.position);
             while (distance >= drawingOffset)
             {
                 Vector3 direction = earlierSpawnedObject == null ? hit.normal : hit.point + hit.normal * 1.0f - earlierSpawnedObject.transform.position;
@@ -123,82 +99,60 @@ public class MouseController : MonoBehaviour
         else
         {
             sphere.transform.SetParent(currentRoot.transform);
-            Destroy(sphere.GetComponent<SphereController>().rigidBody);
+            Destroy(sphere.GetComponent<CubeController>().rigidBody);
         }
         if (earlierSpawnedObject)
         {
-            Vector3 direction = (earlierSpawnedObject.transform.position - sphere.GetComponent<SphereController>().visualObject.transform.position).normalized;
-            if (Mathf.Abs(direction.y) > Mathf.Abs(direction.x) && Mathf.Abs(direction.y) > Mathf.Abs(direction.z))
-            {
-                if (direction.y > 0)
-                {
-                    Debug.Log("Direction is pointing up.");
-                    cubeDirection = Direction.Up;
-                }
-                else
-                {
-                    Debug.Log("Direction is pointing down.");
-                    cubeDirection = Direction.Down;
-                }
-            }
-            else if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y) && Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
-            {
-                if (direction.x > 0)
-                {
-                    Debug.Log("Direction is pointing right.");
-                    cubeDirection = Direction.Right;
-                }
-                else
-                {
-                    Debug.Log("Direction is pointing left.");
-                    cubeDirection = Direction.Left;
-                }
-            }
-            else
-            {
-                Debug.Log("Direction is not primarily pointing up, down, left, or right.");
-            }
+            cubeDirection = GetDirectionComparedToEarlierSpawned(sphere);
         }
         List<Vector3> earlierVertexWorldPositions = new List<Vector3>();
         if (earlierSpawnedObject)
         {
-            // Down right 0
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[1]));
-
-            // Up right 1
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[2]));
-
-            // Down left 2
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[0]));
-
-            // Up left 3
-            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[3]));
+            
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[1])); // Down right 0        
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[2])); // Up right 1         
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[0])); // Down left 2        
+            earlierVertexWorldPositions.Add(earlierSpawnedObject.GetComponent<CubeController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<CubeController>().meshFilter.mesh.vertices[3])); // Up left 3
         }
 
         GenerateCube(sphere, earlierVertexWorldPositions, cubeDirection);
 
-        sphere.GetComponent<SphereController>().meshCollider.sharedMesh = sphere.GetComponent<SphereController>().meshFilter.mesh;
+        sphere.GetComponent<CubeController>().meshCollider.sharedMesh = sphere.GetComponent<CubeController>().meshFilter.mesh;
         earlierSpawnedHitPoint = hitPoint;
         earlierSpawnedObject = sphere;
     }
 
+    private Direction GetDirectionComparedToEarlierSpawned(GameObject sphere)
+    {
+        Vector3 direction = (earlierSpawnedObject.transform.position - sphere.GetComponent<CubeController>().visualObject.transform.position).normalized;
+        if (Mathf.Abs(direction.y) > Mathf.Abs(direction.x) && Mathf.Abs(direction.y) > Mathf.Abs(direction.z))
+        {
+            return direction.y > 0 ? Direction.Up : Direction.Down;
+        }
+        else if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y) && Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+        {
+            return direction.x > 0 ? Direction.Right : Direction.Left;
+        }
+        return Direction.None;
+    }
+
     private void GenerateCube(GameObject sphere, List<Vector3> earlierVertexWorldPositions, Direction direction)
     {
-        MeshFilter meshFilter = sphere.GetComponent<SphereController>().meshFilter;
+        MeshFilter meshFilter = sphere.GetComponent<CubeController>().meshFilter;
         Mesh mesh = new Mesh();
         meshFilter.mesh = mesh;
 
         Vector3 earlierDownRight = Vector3.zero;
         Vector3 earlierUpRight = Vector3.zero;
-
         Vector3 earlierDownLeft = Vector3.zero;
         Vector3 earlierUpLeft = Vector3.zero;
+
         if (earlierVertexWorldPositions.Count > 0)
         {
-            earlierDownLeft = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[0]);
-            earlierUpLeft = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[1]);
-            earlierDownRight = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[2]);
-            earlierUpRight = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[3]);
+            earlierDownLeft = sphere.transform.GetComponent<CubeController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[0]);
+            earlierUpLeft = sphere.transform.GetComponent<CubeController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[1]);
+            earlierDownRight = sphere.transform.GetComponent<CubeController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[2]);
+            earlierUpRight = sphere.transform.GetComponent<CubeController>().visualObject.transform.InverseTransformPoint(earlierVertexWorldPositions[3]);
         }
 
         Vector3[] vertices = new Vector3[8];
@@ -336,38 +290,41 @@ public class MouseController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            Collider[] nearbyColliders = Physics.OverlapSphere(hit.point, drawingOffset);
-
-            for (int i = 0; i < nearbyColliders.Length; i++)
-            {
-                if (nearbyColliders[i].transform.GetComponent<SphereController>())
-                {
-                    return;
-                }
-            }
+            if (HasNearbyColliders(hit.point)) return;
 
             if (currentRoot == null)
             {
                 Vector3 position = hit.point + hit.normal * 1.0f;
                 GameObject root = Instantiate(rootPrefab, position, Quaternion.identity);
-                //earlierSpawnedHitPoint = hit.point;
-                //earlierSpawnedObject = root;
                 currentRoot = root;
             }
         }
+    }
+
+    private bool HasNearbyColliders(Vector3 position)
+    {
+        Collider[] nearbyColliders = Physics.OverlapSphere(position, drawingOffset);
+
+        for (int i = 0; i < nearbyColliders.Length; i++)
+        {
+            if (nearbyColliders[i].transform.GetComponent<CubeVisualController>() || nearbyColliders[i].transform.parent?.GetComponent<RootController>() || nearbyColliders[i].transform.name == "Floor")
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void ConnectDrawedShapes()
     {
         for (int i = 0; i < drawedShape.Count; i++)
         {
-            Rigidbody drawedShapeRigidbody = drawedShape[i].GetComponent<SphereController>().rigidBody;
+            Rigidbody drawedShapeRigidbody = drawedShape[i].GetComponent<CubeController>().rigidBody;
             drawedShapeRigidbody.isKinematic = false;
             drawedShapeRigidbody.solverIterations = solverIterations;
-            drawedShapeRigidbody.mass = sphereMass;
+            drawedShapeRigidbody.mass = cubeMass;
 
-            List<GameObject> neighbors = drawedShape[i].GetComponent<SphereController>().FindNeighbors();
-            Debug.Log("Found " + neighbors.Count);
+            List<GameObject> neighbors = drawedShape[i].GetComponent<CubeController>().FindNeighbors();
             for (int neighborIndex = 0; neighborIndex < neighbors.Count; neighborIndex++)
             {
                 CreateAndConnectConfigurableJoint(neighbors[neighborIndex], drawedShape[i]);
@@ -382,8 +339,8 @@ public class MouseController : MonoBehaviour
 
     private void CreateAndConnectConfigurableJoint(GameObject gameObject, GameObject toConnect)
     {
-        ConfigurableJoint configurableJoint = gameObject.GetComponent<SphereController>().visualObject.AddComponent<ConfigurableJoint>();
-        configurableJoint.connectedBody = toConnect.GetComponent<SphereController>().rigidBody;
+        ConfigurableJoint configurableJoint = gameObject.GetComponent<CubeController>().visualObject.AddComponent<ConfigurableJoint>();
+        configurableJoint.connectedBody = toConnect.GetComponent<CubeController>().rigidBody;
         configurableJoint.angularXMotion = ConfigurableJointMotion.Locked;
         configurableJoint.angularYMotion = ConfigurableJointMotion.Locked;
         configurableJoint.angularZMotion = ConfigurableJointMotion.Locked;
@@ -398,9 +355,12 @@ public class MouseController : MonoBehaviour
     {
         if (currentRoot)
         {
-            currentRoot.GetComponent<Rigidbody>().isKinematic = false;
+            Rigidbody rootRigidbody = currentRoot.GetComponent<Rigidbody>();
+            rootRigidbody.isKinematic = false;
+            rootRigidbody.solverIterations = solverIterations;
+            rootRigidbody.mass = cubeMass;
             currentRoot = null;
-        } 
+        }
     }
 
     public void Reset()
@@ -410,18 +370,20 @@ public class MouseController : MonoBehaviour
 
     public void HandleValueChange(string name, decimal value)
     {
-        Debug.Log(value);
         switch (name)
         {
             case "mass":
-                sphereMass = (float)value;
+                cubeMass = (float)value;
                 break;
+
             case "breakForce":
                 breakForce = (float)value;
                 break;
+
             case "breakTorque":
                 breakTorque = (float)value;
                 break;
+
             default:
                 break;
         }
@@ -434,6 +396,7 @@ public class MouseController : MonoBehaviour
             case "solid":
                 createSolidObjects = state;
                 break;
+
             default:
                 break;
         }
