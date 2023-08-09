@@ -111,9 +111,115 @@ public class MouseController : MonoBehaviour
             sphere.transform.SetParent(currentRoot.transform);
             Destroy(sphere.GetComponent<SphereController>().rigidBody);
         }
+        if (earlierSpawnedObject)
+        {
+            Vector3 direction = (earlierSpawnedObject.transform.position - sphere.GetComponent<SphereController>().visualObject.transform.position).normalized;
+            if (Mathf.Abs(direction.y) > Mathf.Abs(direction.x) && Mathf.Abs(direction.y) > Mathf.Abs(direction.z))
+            {
+                if (direction.y > 0)
+                {
+                    Debug.Log("Direction is pointing up.");
+                }
+                else
+                {
+                    Debug.Log("Direction is pointing down.");
+                }
+            }
+            else if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y) && Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+            {
+                if (direction.x > 0)
+                {
+                    Debug.Log("Direction is pointing right.");
+                }
+                else
+                {
+                    Debug.Log("Direction is pointing left.");
+                }
+            }
+            else
+            {
+                Debug.Log("Direction is not primarily pointing up, down, left, or right.");
+            }
+        }
+
+        Vector3 worldPosEarlierDownRight = Vector3.zero;
+        Vector3 worldPosEarlierUpRight = Vector3.zero;
+
+        if (earlierSpawnedObject)
+        {
+            worldPosEarlierDownRight = earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[1]);
+            worldPosEarlierUpRight = earlierSpawnedObject.GetComponent<SphereController>().visualObject.transform.TransformPoint(earlierSpawnedObject.transform.GetComponent<SphereController>().meshFilter.mesh.vertices[2]);
+        }
+
+        GenerateCube(sphere, worldPosEarlierDownRight, worldPosEarlierUpRight);
 
         earlierSpawnedHitPoint = hitPoint;
         earlierSpawnedObject = sphere;
+    }
+
+    private void GenerateCube(GameObject sphere, Vector3 worldPosEarlierDownRight, Vector3 worldPosEarlierUpRight)
+    {
+        MeshFilter meshFilter = sphere.GetComponent<SphereController>().meshFilter;
+        Mesh mesh = new Mesh();
+        meshFilter.mesh = mesh;
+
+        //Down left offset
+        Vector3 downLeftOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierDownRight);
+        Vector3 upLeftOffset = sphere.transform.GetComponent<SphereController>().visualObject.transform.InverseTransformPoint(worldPosEarlierUpRight);
+        Debug.Log("offset" + downLeftOffset);
+        Vector3[] vertices = new Vector3[]
+        {
+            // Front
+            downLeftOffset, // Down left
+            new Vector3(0.5f, -0.5f, -0.5f), // Down right
+            new Vector3(0.5f, 0.5f, -0.5f), // Up Right
+            upLeftOffset, // Up left
+
+            // Back
+            new Vector3(-0.5f, -0.5f, 0.5f), // Down left
+            new Vector3(0.5f, -0.5f, 0.5f), // Down right
+            new Vector3(0.5f, 0.5f, 0.5f), // Up right
+            new Vector3(-0.5f, 0.5f, 0.5f), // Up left
+        };
+
+        int[] triangles = new int[]
+        {
+            0, 2, 1, 0, 3, 2,    // Front
+            1, 2, 6, 1, 6, 5,    // Right
+            5, 6, 7, 5, 7, 4,    // Back
+            4, 7, 3, 4, 3, 0,    // Left
+            3, 7, 6, 3, 6, 2,    // Top
+            4, 0, 1, 4, 1, 5     // Bottom
+        };
+
+        Vector3[] normals = new Vector3[]
+        {
+            Vector3.forward,
+            Vector3.forward,
+            Vector3.forward,
+            Vector3.forward,
+            Vector3.back,
+            Vector3.back,
+            Vector3.back,
+            Vector3.back,
+        };
+
+        Vector2[] uv = new Vector2[]
+        {
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1),
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1),
+        };
+
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.normals = normals;
+        mesh.uv = uv;
     }
 
     private void CreateRootAtMousePosition()

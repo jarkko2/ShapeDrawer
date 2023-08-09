@@ -459,7 +459,7 @@ MonoBehaviour:
   earlierSpawnedObject: {fileID: 0}
   currentRoot: {fileID: 0}
   drawedShape: []
-  drawingOffset: 1
+  drawingOffset: 1.01
   solverIterations: 10
   sphereMass: 0.5
   breakForce: 1000
