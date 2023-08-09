@@ -179,16 +179,16 @@ public class MouseController : MonoBehaviour
             vertices = new Vector3[]
             {
                 // Front
-            new Vector3(earlierDownLeft.x, earlierDownLeft.y, -0.5f), // Down left
-            new Vector3(0.5f, -0.5f, -0.5f), // Down right
-            new Vector3(0.5f, 0.5f, -0.5f), // Up Right
-            new Vector3(earlierUpLeft.x, earlierUpLeft.y, -0.5f), // Up left
+                new Vector3(earlierDownLeft.x, earlierDownLeft.y, -0.5f), // Down left
+                new Vector3(0.5f, -0.5f, -0.5f), // Down right
+                new Vector3(0.5f, 0.5f, -0.5f), // Up Right
+                new Vector3(earlierUpLeft.x, earlierUpLeft.y, -0.5f), // Up left
 
-            // Back
-            new Vector3(earlierDownLeft.x, earlierDownLeft.y, 0.5f), // Down left
-            new Vector3(0.5f, -0.5f, 0.5f), // Down right
-            new Vector3(0.5f, 0.5f, 0.5f), // Up right
-            new Vector3(earlierUpLeft.x, earlierUpLeft.y, 0.5f), // Up left
+                // Back
+                new Vector3(earlierDownLeft.x, earlierDownLeft.y, 0.5f), // Down left
+                new Vector3(0.5f, -0.5f, 0.5f), // Down right
+                new Vector3(0.5f, 0.5f, 0.5f), // Up right
+                new Vector3(earlierUpLeft.x, earlierUpLeft.y, 0.5f), // Up left
             };
         }
         if (direction == Direction.Right)
@@ -196,16 +196,16 @@ public class MouseController : MonoBehaviour
             vertices = new Vector3[]
             {
                 // Front
-            new Vector3(-0.5f, -0.5f, -0.5f), // Down left
-            new Vector3(earlierDownRight.x, earlierDownRight.y, -0.5f), // Down right
-            new Vector3(earlierUpRight.x, earlierUpRight.y, -0.5f), // Up Right
-            new Vector3(-0.5f, 0.5f, -0.5f), // Up left
+                new Vector3(-0.5f, -0.5f, -0.5f), // Down left
+                new Vector3(earlierDownRight.x, earlierDownRight.y, -0.5f), // Down right
+                new Vector3(earlierUpRight.x, earlierUpRight.y, -0.5f), // Up Right
+                new Vector3(-0.5f, 0.5f, -0.5f), // Up left
 
-            // Back
-            new Vector3(-0.5f, -0.5f, 0.5f), // Down left
-            new Vector3(earlierDownRight.x, earlierDownRight.y, 0.5f), // Down right
-            new Vector3(earlierUpRight.x, earlierUpRight.y, 0.5f), // Up right
-            new Vector3(-0.5f, 0.5f, 0.5f), // Up left
+                // Back
+                new Vector3(-0.5f, -0.5f, 0.5f), // Down left
+                new Vector3(earlierDownRight.x, earlierDownRight.y, 0.5f), // Down right
+                new Vector3(earlierUpRight.x, earlierUpRight.y, 0.5f), // Up right
+                new Vector3(-0.5f, 0.5f, 0.5f), // Up left
             };
         }
         if (direction == Direction.Up)
@@ -230,16 +230,16 @@ public class MouseController : MonoBehaviour
             vertices = new Vector3[]
             {
                // Front
-            new Vector3(earlierUpRight.x, earlierUpRight.y, -0.5f), // Down left
-            new Vector3(earlierUpLeft.x, earlierUpLeft.y, -0.5f), // Down right
-            new Vector3(0.5f, 0.5f, -0.5f), // Up Right
-            new Vector3(-0.5f, 0.5f, -0.5f), // Up left
+                new Vector3(earlierUpRight.x, earlierUpRight.y, -0.5f), // Down left
+                new Vector3(earlierUpLeft.x, earlierUpLeft.y, -0.5f), // Down right
+                new Vector3(0.5f, 0.5f, -0.5f), // Up Right
+                new Vector3(-0.5f, 0.5f, -0.5f), // Up left
 
-            // Back
-            new Vector3(earlierUpRight.x, earlierUpRight.y, 0.5f), // Down left
-            new Vector3(earlierUpLeft.x, earlierUpLeft.y, 0.5f), // Down right
-            new Vector3(0.5f, 0.5f, 0.5f), // Up right
-            new Vector3(-0.5f, 0.5f, 0.5f), // Up left
+                // Back
+                new Vector3(earlierUpRight.x, earlierUpRight.y, 0.5f), // Down left
+                new Vector3(earlierUpLeft.x, earlierUpLeft.y, 0.5f), // Down right
+                new Vector3(0.5f, 0.5f, 0.5f), // Up right
+                new Vector3(-0.5f, 0.5f, 0.5f), // Up left
             };
         }
 
