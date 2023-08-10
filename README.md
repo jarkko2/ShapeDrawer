@@ -9,6 +9,8 @@ Example project on how to make destructible system on Unity with ConfigurableJoi
 5. Drawn objects can be toggled solid (instead of ConfigurableJoint it will use root and child objects)
 6. EarlierObject is used to determite new objects vertices to achieve smoother line 
 
-
+## Limitations/todo
+1. Supports X and Y axis only
+2. Object texturing is not correct on block sides
 
   ![Image](image.png)
