@@ -7,7 +7,8 @@ Example project on how to make destructible block system on Unity with Configura
 3. Break force and break torque can be configured
 4. Mass can be configured
 5. Drawn objects can be toggled solid (instead of ConfigurableJoint it will use root and child objects)
-6. EarlierObject is used to determite new objects vertices to achieve smoother line 
+6. EarlierObject is used to determite new objects vertices to achieve smoother line
+7. Maximum object count per draw
 
 ## Limitations/todo
 1. Supports X and Y axis only
