@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 public class MouseController : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private GameObject spherePrefab;
+
     [SerializeField] private GameObject rootPrefab;
 
     [Header("Cursor object")]
@@ -13,6 +15,7 @@ public class MouseController : MonoBehaviour
 
     [Header("Cube settings")]
     [SerializeField] private float drawingOffset = 0.5f;
+
     [SerializeField] private int solverIterations = 10;
     [SerializeField] private float cubeMass = 1;
     [SerializeField] private float breakForce = 100;
@@ -25,6 +28,7 @@ public class MouseController : MonoBehaviour
     private GameObject earlierSpawnedObject = null;
     private GameObject currentRoot;
     private List<GameObject> drawedShape = new List<GameObject>();
+
     private enum Direction
     {
         Left,
@@ -33,6 +37,7 @@ public class MouseController : MonoBehaviour
         Down,
         None
     }
+
     private Direction cubeDirection = Direction.None;
     private bool hasExceededMaxSize;
 
@@ -43,34 +48,37 @@ public class MouseController : MonoBehaviour
 
     private void CheckInputs()
     {
-        if (Input.GetMouseButton(0) && !hasExceededMaxSize)
+        if (!EventSystem.current.IsPointerOverGameObject())
         {
-            if (drawedShape.Count < maximumDrawObjectSize)
+            if (Input.GetMouseButton(0) && !hasExceededMaxSize)
             {
-                if (!drawing)
+                if (drawedShape.Count < maximumDrawObjectSize)
                 {
-                    drawing = true;
-                    if (createSolidObjects) CreateRootAtMousePosition();
+                    if (!drawing)
+                    {
+                        drawing = true;
+                        if (createSolidObjects) CreateRootAtMousePosition();
+                    }
+                    else
+                    {
+                        CreateCubeAtMousePosition(!createSolidObjects);
+                    }
                 }
                 else
                 {
-                    CreateCubeAtMousePosition(!createSolidObjects);
+                    hasExceededMaxSize = true;
                 }
+            }
+            else if (drawing && !hasExceededMaxSize)
+            {
+                drawing = false;
+                EnablePhysicsOnRigidbody();
+                ConnectDrawedShapes();
             }
             else
             {
-                hasExceededMaxSize = true;
+                hasExceededMaxSize = false;
             }
-        }
-        else if (drawing && !hasExceededMaxSize)
-        {
-            drawing = false;
-            EnablePhysicsOnRigidbody();
-            ConnectDrawedShapes();
-        }
-        else
-        {
-            hasExceededMaxSize = false;
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
