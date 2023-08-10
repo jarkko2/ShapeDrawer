@@ -105,12 +105,17 @@ public class MouseController : MonoBehaviour
         {
             if (PositionHasNearbyColliders(hit.point)) return;
             cursor.transform.position = hit.point + hit.normal * 1.0f;
+
             float distance = earlierSpawnedObject == null ? drawingOffset : Vector3.Distance(earlierSpawnedObject.transform.position, cursor.transform.position);
+
+            // Spawn cubes as long as distance is greater than drawingOffset
             while (distance >= drawingOffset)
             {
                 Vector3 direction = earlierSpawnedObject == null ? hit.normal : hit.point + hit.normal * 1.0f - earlierSpawnedObject.transform.position;
                 Vector3 position = earlierSpawnedObject == null ? hit.point + direction * 1.0f : earlierSpawnedObject.transform.position + direction.normalized * drawingOffset;
                 CreateCube(position, useConfigurableJoint);
+
+                // Calculate new distance
                 distance = Vector3.Distance(earlierSpawnedObject.transform.position, cursor.transform.position);
             }
         }
@@ -128,6 +133,8 @@ public class MouseController : MonoBehaviour
             sphere.transform.SetParent(currentRoot.transform);
             Destroy(sphere.GetComponent<CubeController>().rigidBody);
         }
+
+        // Get vertices in world space from earlier spawned object
         List<Vector3> earlierVertexWorldPositions = new List<Vector3>();
         if (earlierSpawnedObject)
         {
@@ -143,9 +150,11 @@ public class MouseController : MonoBehaviour
                 visualTransform.TransformPoint(mesh.vertices[3])  // Up left 3
             });
 
+            // Get direction to earlier object
             cubeDirection = GetDirectionComparedToEarlierSpawned(sphere);
         }
 
+        // Generate cube depending on direction
         GenerateCube(sphere, earlierVertexWorldPositions, cubeDirection);
 
         sphere.GetComponent<CubeController>().meshCollider.sharedMesh = sphere.GetComponent<CubeController>().meshFilter.mesh;
@@ -311,8 +320,8 @@ public class MouseController : MonoBehaviour
             List<GameObject> neighbors = drawedShape[i].GetComponent<CubeController>().FindNeighbors();
             for (int neighborIndex = 0; neighborIndex < neighbors.Count; neighborIndex++)
             {
+                // Connect blocks together
                 CreateAndConnectConfigurableJoint(neighbors[neighborIndex], drawedShape[i]);
-                CreateAndConnectConfigurableJoint(drawedShape[i], neighbors[neighborIndex]);
             }
         }
         earlierSpawnedObject = null;
