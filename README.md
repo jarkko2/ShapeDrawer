@@ -1,3 +1,3 @@
 # ShapeDrawer
 
-![](video.mov)
+![](video.mp4)
