@@ -19,6 +19,7 @@ public class MouseController : MonoBehaviour
     [SerializeField] private float breakTorque = 100;
     [SerializeField] private bool createSolidObjects = false;
     [SerializeField] private int maximumDrawObjectSize = 20;
+    [SerializeField] private float nearbyCollidersRadius = 0.8f;
 
     private bool drawing = false;
     private GameObject earlierSpawnedObject = null;
@@ -85,7 +86,7 @@ public class MouseController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            if (HasNearbyColliders(hit.point)) return;
+            if (PositionHasNearbyColliders(hit.point)) return;
 
             if (currentRoot == null)
             {
@@ -102,20 +103,20 @@ public class MouseController : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
         {
-            if (HasNearbyColliders(hit.point)) return;
+            if (PositionHasNearbyColliders(hit.point)) return;
             cursor.transform.position = hit.point + hit.normal * 1.0f;
             float distance = earlierSpawnedObject == null ? drawingOffset : Vector3.Distance(earlierSpawnedObject.transform.position, cursor.transform.position);
             while (distance >= drawingOffset)
             {
                 Vector3 direction = earlierSpawnedObject == null ? hit.normal : hit.point + hit.normal * 1.0f - earlierSpawnedObject.transform.position;
                 Vector3 position = earlierSpawnedObject == null ? hit.point + direction * 1.0f : earlierSpawnedObject.transform.position + direction.normalized * drawingOffset;
-                CreateCube(position, useConfigurableJoint, hit.point);
+                CreateCube(position, useConfigurableJoint);
                 distance = Vector3.Distance(earlierSpawnedObject.transform.position, cursor.transform.position);
             }
         }
     }
 
-    private void CreateCube(Vector3 position, bool useConfigurableJoint, Vector3 hitPoint)
+    private void CreateCube(Vector3 position, bool useConfigurableJoint)
     {
         GameObject sphere = Instantiate(spherePrefab, position, Quaternion.identity);
         if (useConfigurableJoint)
@@ -126,9 +127,6 @@ public class MouseController : MonoBehaviour
         {
             sphere.transform.SetParent(currentRoot.transform);
             Destroy(sphere.GetComponent<CubeController>().rigidBody);
-        }
-        if (earlierSpawnedObject)
-        {
         }
         List<Vector3> earlierVertexWorldPositions = new List<Vector3>();
         if (earlierSpawnedObject)
@@ -350,9 +348,9 @@ public class MouseController : MonoBehaviour
         return Direction.None;
     }
 
-    private bool HasNearbyColliders(Vector3 position)
+    private bool PositionHasNearbyColliders(Vector3 position)
     {
-        Collider[] nearbyColliders = Physics.OverlapSphere(position, drawingOffset);
+        Collider[] nearbyColliders = Physics.OverlapSphere(position, nearbyCollidersRadius);
 
         for (int i = 0; i < nearbyColliders.Length; i++)
         {

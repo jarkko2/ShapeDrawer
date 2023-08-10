@@ -1217,11 +1217,11 @@ MonoBehaviour:
   rootPrefab: {fileID: 4254450249299833383, guid: d111b701dfb5cf041871097377ad9890,
     type: 3}
   cursor: {fileID: 1672679679}
-  drawingOffset: 1.01
+  drawingOffset: 1
   solverIterations: 10
   cubeMass: 1
-  breakForce: 750
-  breakTorque: 750
+  breakForce: 1000
+  breakTorque: 1000
   createSolidObjects: 0
   maximumDrawObjectSize: 250
 --- !u!1 &917820558
