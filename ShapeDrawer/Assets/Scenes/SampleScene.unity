@@ -1224,6 +1224,7 @@ MonoBehaviour:
   breakTorque: 1000
   createSolidObjects: 0
   maximumDrawObjectSize: 250
+  nearbyCollidersRadius: 0.8
 --- !u!1 &917820558
 GameObject:
   m_ObjectHideFlags: 0
@@ -3117,7 +3118,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Create solid
+  m_Text: Solid
 --- !u!222 &2015052422
 CanvasRenderer:
   m_ObjectHideFlags: 0
