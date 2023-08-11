@@ -1,6 +1,8 @@
 # ShapeDrawer
 Example project on how to make destructible block system on Unity with ConfigurableJoint
 
+[![Video](https://img.youtube.com/vi/Ty4HPFQudPY/0.jpg)](https://www.youtube.com/watch?v=Ty4HPFQudPY)
+
 ## Features
 1. Object is drawn with mouse
 2. Drawn objects connects when mouse is not pressed
